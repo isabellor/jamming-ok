@@ -1,7 +1,7 @@
 // src/SpotifyAuth.js
 
 const clientId = "c4f1000e4ee643f98fbcac390edf188d";  // poné tu Client ID de Spotify
-const redirectUri = "http://127.0.0.1:5174";  // tu URI de redirección registrada en Spotify
+const redirectUri = "https://spotifyjammingproyect.netlify.app";  // tu URI de redirección registrada en Spotify
 const scopes = [
   "playlist-modify-public",
   "playlist-modify-private",
