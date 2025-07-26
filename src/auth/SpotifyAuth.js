@@ -1,54 +1,61 @@
-// src/SpotifyAuth.js
+const clientId = "c4f1000e4ee643f98fbcac390edf188d";
+const redirectUri = "https://spotifyjammingproyect.netlify.app";
+const scopes = ["playlist-modify-public", "playlist-modify-private"];
 
-const clientId = "c4f1000e4ee643f98fbcac390edf188d";  // poné tu Client ID de Spotify
-const redirectUri = "https://spotifyjammingproyect.netlify.app";  // tu URI de redirección registrada en Spotify
-const scopes = [
-  "playlist-modify-public",
-  "playlist-modify-private",
-  // agregá otros scopes que necesites
-];
-
-let accessToken = "";
-let expiresIn = 0;
-
-export function getAccessToken() {
-  // Verificamos si el token ya está guardado
-  if (accessToken) return accessToken;
-
-  // Buscamos el token en la URL (hash)
-  const hash = window.location.hash;
-
-  if (hash) {
-    // Extraemos el access_token y expires_in usando RegExp
-    const tokenMatch = hash.match(/access_token=([^&]*)/);
-    const expiresInMatch = hash.match(/expires_in=([^&]*)/);
-
-    if (tokenMatch && expiresInMatch) {
-      accessToken = tokenMatch[1];
-      expiresIn = Number(expiresInMatch[1]);
-
-      // Limpiar el hash de la URL para evitar problemas
-      window.history.pushState("", document.title, window.location.pathname);
-
-      // Timer para borrar el token cuando expire
-      setTimeout(() => accessToken = "", expiresIn * 1000);
-
-      return accessToken;
-    }
-  }
-
-  // Si no hay token en URL, devolver vacío para pedir login
-  return "";
+function generateRandomString(length) {
+  const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  return Array.from(crypto.getRandomValues(new Uint8Array(length)))
+    .map((x) => possible.charAt(x % possible.length))
+    .join("");
 }
 
-export function redirectToSpotifyLogin() {
-  const authUrl = 
-    `https://accounts.spotify.com/authorize?client_id=${clientId}` +
-    `&response_type=token` +
+function generateCodeChallenge(codeVerifier) {
+  return crypto.subtle.digest("SHA-256", new TextEncoder().encode(codeVerifier)).then((hash) => {
+    return btoa(String.fromCharCode(...new Uint8Array(hash)))
+      .replace(/=/g, "")
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_");
+  });
+}
+
+export async function redirectToSpotifyLogin() {
+  const codeVerifier = generateRandomString(128);
+  const codeChallenge = await generateCodeChallenge(codeVerifier);
+  localStorage.setItem("spotify_code_verifier", codeVerifier);
+
+  const authUrl =
+    "https://accounts.spotify.com/authorize" +
+    `?client_id=${clientId}` +
+    "&response_type=code" +
+    `&redirect_uri=${encodeURIComponent(redirectUri)}` +
     `&scope=${encodeURIComponent(scopes.join(" "))}` +
-    `&redirect_uri=${encodeURIComponent(redirectUri)}`;
+    "&code_challenge_method=S256" +
+    `&code_challenge=${codeChallenge}`;
 
- console.log("Spotify Auth URL:", authUrl);
+  window.location.href = authUrl;
+}
 
-  window.location = authUrl;
+export async function getAccessToken() {
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get("code");
+  if (!code) return null;
+
+  const codeVerifier = localStorage.getItem("spotify_code_verifier");
+
+  const body = new URLSearchParams({
+    client_id: clientId,
+    grant_type: "authorization_code",
+    code,
+    redirect_uri: redirectUri,
+    code_verifier: codeVerifier
+  });
+
+  const response = await fetch("https://accounts.spotify.com/api/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body
+  });
+
+  const data = await response.json();
+  return data.access_token;
 }
