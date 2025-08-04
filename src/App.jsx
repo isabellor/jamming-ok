@@ -3,7 +3,7 @@ import { getAccessToken, redirectToSpotifyLogin } from "./SpotifyAuth.js";
 
 import Spotify from "./utils/Spotify.js";
 
-import SearchBar from "./components/SearchBar.jsx";
+import SearchBar from "./components/SearchBar.jsx"
 import SearchResults from "./components/SearchResults.jsx";
 import Playlist from "./components/Playlist.jsx";
 
