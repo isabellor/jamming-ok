@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getAccessToken, redirectToSpotifyLogin } from "./SpotifyAuth.js";
+
 import Spotify from "./utils/Spotify.js";
 
 import SearchBar from "./components/SearchBar.jsx";
