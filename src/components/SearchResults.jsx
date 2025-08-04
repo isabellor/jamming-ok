@@ -1,11 +1,14 @@
-import TrackList from "./TrackList";
+// src/components/SearchResults.js
+import React from 'react';
+import TrackList from './TrackList';
 
-export default function SearchResults({ tracks, onAdd }) {
+function SearchResults({ results, onAdd }) {
   return (
     <div>
-      <h2>Search Results</h2>
-      <TrackList tracks={tracks} onAdd={onAdd} isRemoval={false} />
-      
+      <h2>Resultados</h2>
+      <TrackList tracks={results} onAction={onAdd} actionLabel="+" />
     </div>
   );
 }
+
+export default SearchResults;

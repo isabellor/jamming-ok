@@ -1,26 +1,18 @@
-import { useState } from "react";
-import TrackList from "./TrackList";
+// src/components/Playlist.js
+import React from 'react';
+import TrackList from './TrackList';
 
-export default function Playlist({ playlistName, onNameChange, tracks = [], onRemove, onSave }) {
-  // Estado local para controlar el input, sincronizado con playlistName
-  const [name, setName] = useState(playlistName);
-
-  // Actualizamos el estado local y notificamos al padre
-  const handleNameChange = (event) => {
-    setName(event.target.value);
-    onNameChange(event.target.value);
-  };
-
+function Playlist({ name, tracks, onRemove, onNameChange, onSave }) {
   return (
     <div>
-      <input 
-        type="text" 
-        value={name} 
-        onChange={handleNameChange} 
-        style={{ fontSize: "1.5em", fontWeight: "bold", marginBottom: "1rem" }}
+      <input
+        value={name}
+        onChange={(e) => onNameChange(e.target.value)}
       />
-      <TrackList tracks={tracks} onRemove={onRemove} isRemoval={true} />
-      <button onClick={onSave}>Save to Spotify</button>
+      <TrackList tracks={tracks} onAction={onRemove} actionLabel="–" />
+      <button onClick={onSave}>Guardar en Spotify</button>
     </div>
   );
 }
+
+export default Playlist;

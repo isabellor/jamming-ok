@@ -1,83 +1,58 @@
-import { useContext, useEffect, useState } from "react";
-import { AuthContext }  from "./auth/Auth.jsx"; 
-import { getAccessToken, redirectToSpotifyLogin } from "./auth/SpotifyAuth.js";
-import Spotify from "./utils/Spotify.js";
+// src/App.js
+import React, { useState } from 'react';
+import './App.css';
+import Spotify from './auth.jsx';
 
-import SearchBar from "./components/SearchBar.jsx";
-import SearchResults from "./components/SearchResults.jsx";
-import Playlist from "./components/Playlist.jsx";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import SearchBar from './components/SearchBar';
+import SearchResults from './components/SearchResults';
+import Playlist from './components/Playlist';
 
-export default function App() {
-  const { token, login, logout } = useContext(AuthContext);
-
+function App() {
   const [searchResults, setSearchResults] = useState([]);
   const [playlistTracks, setPlaylistTracks] = useState([]);
-  const [playlistName, setPlaylistName] = useState("Mi Playlist");
+  const [playlistName, setPlaylistName] = useState('Nueva Playlist');
 
-  useEffect(() => {
-    const accessTokenFromUrl = getAccessToken();
-    if (!token && accessTokenFromUrl) {
-      login(accessTokenFromUrl);
-    }
-  }, [token, login]);
-
-  if (!token) {
-    return (
-      <div style={{ padding: "2rem" }}>
-        <h2>Para usar Jammming necesitas iniciar sesión en Spotify</h2>
-        <button onClick={redirectToSpotifyLogin}>Iniciar sesión con Spotify</button>
-      </div>
-    );
-  }
+  const search = async (term) => {
+    const results = await Spotify.search(term);
+    setSearchResults(results);
+  };
 
   const addTrack = (track) => {
-    if (!playlistTracks.find((t) => t.id === track.id)) {
-      setPlaylistTracks([...playlistTracks, track]);
-      toast.success(`Agregaste "${track.name}"`);
-    }
+    if (playlistTracks.find((saved) => saved.id === track.id)) return;
+    setPlaylistTracks([...playlistTracks, track]);
   };
 
   const removeTrack = (track) => {
     setPlaylistTracks(playlistTracks.filter((t) => t.id !== track.id));
-    toast.info(`Removiste "${track.name}"`);
   };
 
-  const savePlaylist = async () => {
-    const trackUris = playlistTracks.map((t) => t.uri);
-    try {
-      await Spotify.savePlaylist(playlistName, trackUris, token);
-      toast.success("Playlist guardada en Spotify!");
-      setPlaylistName("Nueva Playlist");
-      setPlaylistTracks([]);
-    } catch (error) {
-      toast.error("Error guardando la playlist");
-    }
+  const updatePlaylistName = (name) => {
+    setPlaylistName(name);
   };
 
-  const handleSearch = async (term) => {
-    // Aquí puedes implementar la búsqueda real con la API Spotify (GET /search)
-    // Por ahora simulamos con datos fijos o vacíos
-    toast.info(`Buscando: ${term}`);
-    setSearchResults([]); // O la respuesta real
+  const savePlaylist = () => {
+    const trackUris = playlistTracks.map((track) => track.uri);
+    Spotify.savePlaylist(playlistName, trackUris);
+    setPlaylistName('Nueva Playlist');
+    setPlaylistTracks([]);
   };
 
   return (
-    <div className="App" style={{ padding: "1rem" }}>
-      <button onClick={logout} style={{ float: "right" }}>
-        Logout
-      </button>
-      <SearchBar onSearch={handleSearch} />
-      <SearchResults tracks={searchResults} onAdd={addTrack} />
-      <Playlist
-        playlistName={playlistName}
-        onNameChange={setPlaylistName}
-        tracks={playlistTracks}
-        onRemove={removeTrack}
-        onSave={savePlaylist}
-      />
-      <ToastContainer />
+    <div>
+      <h1>Jammming 🎵</h1>
+      <SearchBar onSearch={search} />
+      <div className="App-playlist">
+        <SearchResults results={searchResults} onAdd={addTrack} />
+        <Playlist
+          name={playlistName}
+          tracks={playlistTracks}
+          onRemove={removeTrack}
+          onNameChange={updatePlaylistName}
+          onSave={savePlaylist}
+        />
+      </div>
     </div>
   );
 }
+
+export default App;

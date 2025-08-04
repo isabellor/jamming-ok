@@ -1,13 +1,16 @@
-export default function Track({ track, onAdd, onRemove, isRemoval }) {
+// src/components/Track.js
+import React from 'react';
+
+function Track({ track, onAction, actionLabel }) {
+  const handleClick = () => onAction(track);
+
   return (
-    <div className="Track">
+    <div>
       <h3>{track.name}</h3>
       <p>{track.artist} | {track.album}</p>
-      {isRemoval ? (
-        <button onClick={() => onRemove(track)}>Remove</button>
-      ) : (
-        <button onClick={() => onAdd(track)}>Add</button>
-      )}
+      <button onClick={handleClick}>{actionLabel}</button>
     </div>
   );
 }
+
+export default Track;

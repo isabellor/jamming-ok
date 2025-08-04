@@ -1,17 +1,20 @@
-import Track from "./Track";
+// src/components/TrackList.js
+import React from 'react';
+import Track from './Track';
 
-export default function TrackList({ tracks, onAdd, onRemove, isRemoval }) {
+function TrackList({ tracks, onAction, actionLabel }) {
   return (
     <div>
       {tracks.map((track) => (
-        <Track 
-          key={track.id} 
-          track={track} 
-          onAdd={onAdd} 
-          onRemove={onRemove} 
-          isRemoval={isRemoval} 
+        <Track
+          key={track.id}
+          track={track}
+          onAction={onAction}
+          actionLabel={actionLabel}
         />
       ))}
     </div>
   );
 }
+
+export default TrackList;
