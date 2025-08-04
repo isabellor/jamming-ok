@@ -1,58 +1,76 @@
-// src/App.js
-import React, { useState } from 'react';
-import './App.css';
-import Spotify from './auth.jsx';
+import { useEffect, useState } from "react";
+import { getAccessToken, redirectToSpotifyLogin } from "./auth/SpotifyAuth.js";
+import Spotify from "./utils/Spotify.js";
 
-import SearchBar from './components/SearchBar';
-import SearchResults from './components/SearchResults';
-import Playlist from './components/Playlist';
+import SearchBar from "./components/SearchBar.jsx";
+import SearchResults from "./components/SearchResults.jsx";
+import Playlist from "./components/Playlist.jsx";
 
-function App() {
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
+export default function App() {
+  const [token, setToken] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [playlistTracks, setPlaylistTracks] = useState([]);
-  const [playlistName, setPlaylistName] = useState('Nueva Playlist');
+  const [playlistName, setPlaylistName] = useState("Mi Playlist");
 
-  const search = async (term) => {
-    const results = await Spotify.search(term);
-    setSearchResults(results);
-  };
+  useEffect(() => {
+    const tokenFromUrl = getAccessToken();
+    if (tokenFromUrl) setToken(tokenFromUrl);
+  }, []);
+
+  if (!token) {
+    return (
+      <div style={{ padding: "2rem" }}>
+        <h2>Para usar Jammming necesitas iniciar sesión en Spotify</h2>
+        <button onClick={redirectToSpotifyLogin}>Iniciar sesión con Spotify</button>
+      </div>
+    );
+  }
 
   const addTrack = (track) => {
-    if (playlistTracks.find((saved) => saved.id === track.id)) return;
-    setPlaylistTracks([...playlistTracks, track]);
+    if (!playlistTracks.find(t => t.id === track.id)) {
+      setPlaylistTracks([...playlistTracks, track]);
+      toast.success(`Agregaste "${track.name}"`);
+    }
   };
 
   const removeTrack = (track) => {
-    setPlaylistTracks(playlistTracks.filter((t) => t.id !== track.id));
+    setPlaylistTracks(playlistTracks.filter(t => t.id !== track.id));
+    toast.info(`Removiste "${track.name}"`);
   };
 
-  const updatePlaylistName = (name) => {
-    setPlaylistName(name);
+  const savePlaylist = async () => {
+    const trackUris = playlistTracks.map(t => t.uri);
+    try {
+      await Spotify.savePlaylist(playlistName, trackUris, token);
+      toast.success("Playlist guardada en Spotify!");
+      setPlaylistName("Nueva Playlist");
+      setPlaylistTracks([]);
+    } catch {
+      toast.error("Error guardando la playlist");
+    }
   };
 
-  const savePlaylist = () => {
-    const trackUris = playlistTracks.map((track) => track.uri);
-    Spotify.savePlaylist(playlistName, trackUris);
-    setPlaylistName('Nueva Playlist');
-    setPlaylistTracks([]);
+  const handleSearch = async (term) => {
+    // Aquí iría la búsqueda real, por ahora vacía
+    toast.info(`Buscando: ${term}`);
+    setSearchResults([]);
   };
 
   return (
-    <div>
-      <h1>Jammming 🎵</h1>
-      <SearchBar onSearch={search} />
-      <div className="App-playlist">
-        <SearchResults results={searchResults} onAdd={addTrack} />
-        <Playlist
-          name={playlistName}
-          tracks={playlistTracks}
-          onRemove={removeTrack}
-          onNameChange={updatePlaylistName}
-          onSave={savePlaylist}
-        />
-      </div>
+    <div className="App" style={{ padding: "1rem" }}>
+      <SearchBar onSearch={handleSearch} />
+      <SearchResults tracks={searchResults} onAdd={addTrack} />
+      <Playlist 
+        playlistName={playlistName} 
+        onNameChange={setPlaylistName} 
+        tracks={playlistTracks} 
+        onRemove={removeTrack} 
+        onSave={savePlaylist} 
+      />
+      <ToastContainer />
     </div>
   );
 }
-
-export default App;
