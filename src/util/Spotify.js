@@ -1,5 +1,5 @@
 const clientId = 'c4f1000e4ee643f98fbcac390edf188d'; // reemplazá con tu client ID
-const redirectUri = 'https://localhost:5173/';
+const redirectUri = 'https://spotifyjammingproyect.netlify.app';
 
 let accessToken;
 
