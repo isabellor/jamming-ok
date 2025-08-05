@@ -1,25 +1,18 @@
-import { useState } from "react";
+import React, { useState } from 'react';
 
-export default function SearchBar({ onSearch }) {
-  const [searchTerm, setSearchTerm] = useState("");
+function SearchBar({ onSearch }) {
+  const [term, setTerm] = useState('');
 
-  const handleChange = (e) => {
-    setSearchTerm(e.target.value);
-  };
+  const handleTermChange = (e) => setTerm(e.target.value);
 
-  const handleSearch = () => {
-    onSearch(searchTerm);
-  };
+  const search = () => onSearch(term);
 
   return (
     <div>
-      <input 
-        type="text" 
-        placeholder="Search for a song..." 
-        value={searchTerm} 
-        onChange={handleChange} 
-      />
-      <button onClick={handleSearch}>Search</button>
+      <input onChange={handleTermChange} placeholder="Ingresá un tema" />
+      <button onClick={search}>Buscar</button>
     </div>
   );
 }
+
+export default SearchBar;

@@ -1,16 +1,18 @@
-// src/components/TrackList.js
+// src/components/TrackList.jsx
+
 import React from 'react';
 import Track from './Track';
 
-function TrackList({ tracks, onAction, actionLabel }) {
+function TrackList({ tracks, onAdd, onRemove, isRemoval }) {
   return (
     <div>
       {tracks.map((track) => (
         <Track
           key={track.id}
           track={track}
-          onAction={onAction}
-          actionLabel={actionLabel}
+          onAdd={onAdd}
+          onRemove={onRemove}
+          isRemoval={isRemoval}
         />
       ))}
     </div>

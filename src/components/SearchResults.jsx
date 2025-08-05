@@ -1,12 +1,11 @@
-// src/components/SearchResults.js
 import React from 'react';
 import TrackList from './TrackList';
 
-function SearchResults({ results, onAdd }) {
+function SearchResults({ searchResults, onAdd }) {
   return (
     <div>
       <h2>Resultados</h2>
-      <TrackList tracks={results} onAction={onAdd} actionLabel="+" />
+      <TrackList tracks={searchResults} onAdd={onAdd} isRemoval={false} />
     </div>
   );
 }
