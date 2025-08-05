@@ -1,79 +1,74 @@
-import { useEffect, useState } from 'react';
-import { Spotify } from './utils/Spotify.js';
-import SearchBar from './components/SearchBar.jsx';
-import SearchResults from './components/SearchResults.jsx';
-import Playlist from './components/Playlist.jsx';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+// src/App.jsx
+import { useEffect, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { redirectToSpotifyLogin, fetchAccessToken, search, savePlaylist, getAccessToken } from "./utils/Spotify";
+import SearchBar from "./components/SearchBar";
+import SearchResults from "./components/SearchResults";
+import Playlist from "./components/Playlist";
 
-function App() {
-  const [token, setToken] = useState(null);
+export default function App() {
+  const [tokenLoaded, setTokenLoaded] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
   const [playlistTracks, setPlaylistTracks] = useState([]);
-  const [playlistName, setPlaylistName] = useState('Nueva Playlist');
+  const [playlistName, setPlaylistName] = useState("Mi Playlist");
+
+  const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const code = urlParams.get('code');
+    const query = new URLSearchParams(location.search);
+    const code = query.get("code");
 
-    if (!token && code) {
-      Spotify.getAccessToken(code).then(access => {
-        setToken(access);
-        window.history.pushState({}, '', '/'); // Limpia la URL
+    if (code) {
+      fetchAccessToken(code).then(() => {
+        setTokenLoaded(true);
+        navigate("/");
       });
     }
-  }, [token]);
+  }, [location, navigate]);
 
-  if (!token) {
-    return (
-      <div style={{ padding: '2rem' }}>
-        <h2>Conecta con Spotify para usar la app</h2>
-        <button onClick={Spotify.redirectToAuthCodeFlow}>
-          Iniciar sesión con Spotify
-        </button>
-      </div>
-    );
-  }
+  const handleLogin = () => {
+    redirectToSpotifyLogin();
+  };
 
   const handleSearch = async (term) => {
-    const results = await Spotify.search(term);
+    const results = await search(term);
     setSearchResults(results);
   };
 
   const addTrack = (track) => {
-    if (!playlistTracks.find((t) => t.id === track.id)) {
+    if (!playlistTracks.find(t => t.id === track.id)) {
       setPlaylistTracks([...playlistTracks, track]);
-      toast.success(`Agregaste "${track.name}"`);
     }
   };
 
   const removeTrack = (track) => {
-    setPlaylistTracks(playlistTracks.filter((t) => t.id !== track.id));
-    toast.info(`Removiste "${track.name}"`);
+    setPlaylistTracks(playlistTracks.filter(t => t.id !== track.id));
   };
 
-  const savePlaylist = async () => {
+  const handleSave = async () => {
     const uris = playlistTracks.map(t => t.uri);
-    await Spotify.savePlaylist(playlistName, uris);
-    toast.success('¡Playlist guardada!');
-    setPlaylistName('Nueva Playlist');
+    await savePlaylist(playlistName, uris);
+    setPlaylistName("Nueva Playlist");
     setPlaylistTracks([]);
   };
 
+  if (!getAccessToken() && !tokenLoaded) {
+    return <button onClick={handleLogin}>Login con Spotify</button>;
+  }
+
   return (
-    <div className="App" style={{ padding: '1rem' }}>
+    <div className="App">
+      <h1>Jammming</h1>
       <SearchBar onSearch={handleSearch} />
-      <SearchResults tracks={searchResults} onAdd={addTrack} />
+      <SearchResults searchResults={searchResults} onAdd={addTrack} />
       <Playlist
         playlistName={playlistName}
         onNameChange={setPlaylistName}
         tracks={playlistTracks}
         onRemove={removeTrack}
-        onSave={savePlaylist}
+        onSave={handleSave}
       />
-      <ToastContainer />
     </div>
   );
 }
-
-export default App;
